@@ -18,9 +18,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Vibrator;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -32,6 +29,10 @@ import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.blikoon.qrcodescanner.camera.CameraManager;
 import com.blikoon.qrcodescanner.decode.CaptureActivityHandler;
@@ -119,7 +120,7 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
     }
 
     private void initView() {
-        TextView tvPic = (TextView) findViewById(R.id.qr_code_header_black_pic);
+        
         mIvFlashLight = (ImageView) findViewById(R.id.qr_code_iv_flash_light);
         mTvFlashLightText = (TextView) findViewById(R.id.qr_code_tv_flash_light);
         mQrCodeFinderView = (QrCodeFinderView) findViewById(R.id.qr_code_view_finder);
@@ -127,7 +128,13 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
         mLlFlashLight = findViewById(R.id.qr_code_ll_flash_light);
         mHasSurface = false;
         mIvFlashLight.setOnClickListener(this);
-        tvPic.setOnClickListener(this);
+
+        TextView tvPic = (TextView) findViewById(R.id.qr_code_header_black_pic);
+        if (hasExternalStoragePermission()) {
+            tvPic.setOnClickListener(this);
+        } else {
+            tvPic.setVisibility(View.GONE);
+        }
     }
 
     private void initData() {
