@@ -1,6 +1,7 @@
 package com.blikoon.qrcodescanner;
 
 
+import android.Manifest.permission;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -29,6 +30,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.zxing.Result;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.blikoon.qrcodescanner.camera.CameraManager;
 import com.blikoon.qrcodescanner.decode.CaptureActivityHandler;
 import com.blikoon.qrcodescanner.decode.DecodeImageCallback;
@@ -49,6 +53,7 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
     private static final int REQUEST_PICTURE = 1;
     public static final int MSG_DECODE_SUCCEED = 1;
     public static final int MSG_DECODE_FAIL = 2;
+    private static final int STORAGE_PERMISSION_REQUEST = 3;
     private CaptureActivityHandler mCaptureActivityHandler;
     private boolean mHasSurface;
     private boolean mPermissionOk;
@@ -134,6 +139,33 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
     private boolean hasCameraPermission() {
         PackageManager pm = getPackageManager();
         return PackageManager.PERMISSION_GRANTED == pm.checkPermission("android.permission.CAMERA", getPackageName());
+    }
+
+    private boolean hasStoragePermission() {
+        return ContextCompat.checkSelfPermission(
+            this, permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void showAndRequestStoragePermission(){
+        if(ActivityCompat.shouldShowRequestPermissionRationale(this, permission.READ_EXTERNAL_STORAGE)){
+            ActivityCompat.requestPermissions(QrCodeActivity.this,
+                new String[]{permission.READ_EXTERNAL_STORAGE},
+                STORAGE_PERMISSION_REQUEST);
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(
+        int requestCode,
+        @NonNull String[] permissions,
+        @NonNull int[] grantResults) {
+
+        if (requestCode == STORAGE_PERMISSION_REQUEST){
+            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                openSystemAlbum();
+            }else{
+                Toast.makeText(QrCodeActivity.this, "Permission missing", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
@@ -306,14 +338,13 @@ public class QrCodeActivity extends Activity implements Callback, OnClickListene
 
         }else if(v.getId() == R.id.qr_code_header_black_pic)
         {
-            if (!hasCameraPermission()) {
-                    mDecodeManager.showPermissionDeniedDialog(this);
-                } else {
-                    openSystemAlbum();
-                }
-
+            if(!hasStoragePermission()) {
+                showAndRequestStoragePermission();
+                // openSystemAlbum triggered in response to request
+            } else{
+                openSystemAlbum();
+            }
         }
-
     }
 
     private void openSystemAlbum() {
